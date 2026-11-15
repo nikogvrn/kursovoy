@@ -1,4 +1,5 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
+
 #include <locale.h>
 #include <math.h>
 #include <stdio.h>
@@ -15,8 +16,9 @@ int main(void)
     printf("Состояние программы: ИНИЦИАЛИЗАЦИЯ.\n");
     printf("Настройте параметры контроля.\n");
 
-    double q0 = 48.0;// по усл
-    double allowed_deviation_percent = 10.0;// по усл
+    double q0 = 48.0;
+
+    double allowed_deviation_percent = 10.0;
 
     double q_lower_limit;
     double q_upper_limit;
@@ -25,18 +27,9 @@ int main(void)
 
     const char* input_file_name = "input.txt";
     FILE* input_file = fopen(input_file_name, "r");
-    if (input_file == NULL) {
-        printf("Ошибка: не удалось открыть файл %s.\n", input_file_name);
-        return 1;
-    }
 
     const char* output_file_name = "results.txt";
     FILE* output_file = fopen(output_file_name, "w");
-    if (output_file == NULL) {
-        printf("Ошибка: не удалось создать файл %s.\n", output_file_name);
-        fclose(input_file);
-        return 1;
-    }
 
     printf("\nСостояние программы: РАБОТА.\n");
     printf("Границы Q: от %.2f до %.2f.\n\n", q_lower_limit, q_upper_limit);
@@ -51,7 +44,7 @@ int main(void)
         double q;
         const char* state;
 
-        if (not isfinite(x) or x < 5.0 or x > 80.0) {
+        if (x < 5.0 or x > 80.0) {
             printf("Измерение пропущено: X должно быть в диапазоне 5–80.\n");
             fprintf(output_file,
                 "Измерение пропущено: X должно быть в диапазоне 5–80.\n");
@@ -84,8 +77,7 @@ int main(void)
             x, q, state);
     }
 
-    printf("Состояние программы: КОНЕЦ. Результаты записаны в %s.\n",
-        output_file_name);
+    printf("Состояние программы: КОНЕЦ.");
     fprintf(output_file, "Состояние программы: КОНЕЦ.\n");
 
     fclose(input_file);
