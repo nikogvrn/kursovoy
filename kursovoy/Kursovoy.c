@@ -1,5 +1,4 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
-
 #include <locale.h>
 #include <math.h>
 #include <stdio.h>
@@ -10,39 +9,62 @@ double calculate_q(double x);
 int main(void)
 {
     int had_input_error = 0;
+    int read_status;
+    int has_measurement = 0;
 
     setlocale(LC_CTYPE, "RUS");
 
     printf("Состояние программы: ИНИЦИАЛИЗАЦИЯ.\n");
     printf("Настройте параметры контроля.\n");
 
-    double q0 = 48.0;
+    double q0; //48.0
+    printf("Введите базовое значение Q0: ");
+    scanf("%lf", &q0);
 
-    double allowed_deviation_percent = 10.0;
+    double deviation_percent; //10.0
+    printf("Введите допустимое отклонение в процентах: ");
+    scanf("%lf", &deviation_percent);
 
     double q_lower_limit;
     double q_upper_limit;
-    q_lower_limit = q0 * (1.0 - allowed_deviation_percent / 100.0);
-    q_upper_limit = q0 * (1.0 + allowed_deviation_percent / 100.0);
+
+    q_lower_limit = q0 * (1.0 - deviation_percent / 100.0);
+    q_upper_limit = q0 * (1.0 + deviation_percent / 100.0);
 
     const char* input_file_name = "input.txt";
     FILE* input_file = fopen(input_file_name, "r");
 
+    if (input_file == NULL) {
+        printf("Ошибка: не удалось открыть файл %s.\n", input_file_name);
+        return 1;
+    }
+
     const char* output_file_name = "results.txt";
     FILE* output_file = fopen(output_file_name, "w");
 
+    if (output_file == NULL) {
+        printf("Ошибка: не удалось создать файл %s.\n", output_file_name);
+        fclose(input_file);
+        return 1;
+    }
+
     printf("\nСостояние программы: РАБОТА.\n");
-    printf("Границы Q: от %.2f до %.2f.\n\n", q_lower_limit, q_upper_limit);
+    printf("Границы Q: от %.2f до %.2f.\n\n",
+        q_lower_limit, q_upper_limit);
 
     fprintf(output_file,
         "Параметры контроля: Q0 = %.2f, отклонение = %.2f%%, "
         "границы Q = [%.2f; %.2f].\n\n",
-        q0, allowed_deviation_percent, q_lower_limit, q_upper_limit);
+        q0, deviation_percent,
+        q_lower_limit, q_upper_limit);
 
     double x;
-    while (fscanf(input_file, "%lf", &x) == 1) {
+
+    while ((read_status = fscanf(input_file, "%lf", &x)) == 1) {
         double q;
         const char* state;
+
+        has_measurement = 1;
 
         if (x < 5.0 or x > 80.0) {
             printf("Измерение пропущено: X должно быть в диапазоне 5–80.\n");
@@ -70,6 +92,7 @@ int main(void)
         else {
             state = "ПРЕДУПРЕЖДЕНИЕ";
         }
+
         printf("Показание: X = %.2f, Q = %.2f, состояние: %s.\n",
             x, q, state);
         fprintf(output_file,
@@ -77,7 +100,20 @@ int main(void)
             x, q, state);
     }
 
-    printf("Состояние программы: КОНЕЦ.");
+    if (read_status == 0) {
+        printf("Ошибка: в файле встретилось не число.\n");
+        fprintf(output_file,
+            "Ошибка: в файле встретилось не число.\n");
+        had_input_error = 1;
+    }
+    else if (has_measurement == 0) {
+        printf("Ошибка: файл %s пуст.\n", input_file_name);
+        fprintf(output_file, "Ошибка: файл %s пуст.\n", input_file_name);
+        had_input_error = 1;
+    }
+
+    printf("Состояние программы: КОНЕЦ. Результаты записаны в %s.\n",
+        output_file_name);
     fprintf(output_file, "Состояние программы: КОНЕЦ.\n");
 
     fclose(input_file);
